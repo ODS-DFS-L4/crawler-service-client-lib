@@ -1,0 +1,1567 @@
+openapi: 3.0.0
+info:
+  title: icds
+  description: >
+
+    Industrial Corridors Discovery Finder & Discovery Service.
+
+    This service provides APIs to discover and manage industrial corridors and
+    drone ports.
+
+    It includes features for authentication, data management, and health checks.
+  version: 0.1.0
+paths:
+  /:
+    get:
+      summary: Root
+      operationId: root__get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /v1/api/version-availability:
+    get:
+      tags:
+        - common
+      summary: Read Version Availability
+      description: Get the status of the discovery service and software version.
+      operationId: read_version_availability_v1_api_version_availability_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VersionAvailabilityRead'
+        '404':
+          description: Operation not found
+  /v1/api/ports/query:
+    post:
+      tags:
+        - drone-ports
+      summary: Query Drone ports
+      description: Query all the drone ports in an area of interest.
+      operationId: search_drone_ports_v1_api_managed_corridors_ports_query_post
+      parameters:
+        - name: supports_drone_type
+          in: query
+          required: false
+          schema:
+            anyOf:
+              - type: string
+              - type: 'null'
+            title: Supports Drone Type
+        - name: usage_type
+          in: query
+          required: false
+          schema:
+            anyOf:
+              - type: integer
+              - type: 'null'
+            title: Usage Type
+        - name: port_type
+          in: query
+          required: false
+          schema:
+            anyOf:
+              - type: integer
+              - type: 'null'
+            title: Port Type
+        - name: manufacturer
+          in: query
+          required: false
+          schema:
+            anyOf:
+              - type: string
+              - type: 'null'
+            title: Manufacturer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueryDronePortReferenceParameters'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/QueryDronePortReferenceResponse'
+                title: >-
+                  Response Search Drone Ports V1 Api Managed Corridors Ports
+                  Query Post
+        '400':
+          detail: Invalid area of interest, please provide valid coordinates
+          description: Bad Request
+        '404':
+          description: Operation not found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v1/api/ports/{port_id}:
+    get:
+      tags:
+        - drone-ports
+      summary: Get drone port reference details
+      description: Retrieve details of a specific drone port by its ID.
+      operationId: get_drone_port_details_v1_api_managed_corridors_ports__port_id__get
+      parameters:
+        - name: port_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            description: The ID of the drone port to retrieve.
+            title: Port Id
+          description: The ID of the drone port to retrieve.
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateOrUpdateDronePortReferenceResponse'
+        '404':
+          description: Operation not found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    put:
+      tags:
+        - drone-ports
+      summary: Upsert Drone Port Reference
+      description: |-
+        Upsert (update or insert) a drone port reference.
+        This function handles the creation or updating of a drone port reference
+        based on the provided payload and port ID. If the drone port is created,
+        the response status code is set to 201.
+      operationId: upsert_drone_port_reference_v1_api_managed_corridors_ports__port_id__put
+      parameters:
+        - name: port_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: Port Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PutDronePortReferenceParameters'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateOrUpdateDronePortReferenceResponse'
+        '404':
+          description: Operation not found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+        - drone-ports
+      summary: Delete Drone Port Reference
+      description: Deletes a drone port reference by its port ID.
+      operationId: >-
+        delete_drone_port_reference_v1_api_managed_corridors_ports__port_id__delete
+      parameters:
+        - name: port_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: Port Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteDronePortReferenceResponse'
+        '404':
+          description: Operation not found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v1/api/airways/query:
+    post:
+      tags:
+        - airways
+      summary: 'Query airways '
+      description: >-
+        This endpoint allows querying section of airways based on the area of
+        interest. Although it uses request.POST, no changes are made to the
+        database. The POST method is used instead of GET because GET does not
+        support passing body parameters for querying.
+      operationId: search_for_airways_v1_api_aerial_corridors_airways_query_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueryAirwayDefinitionParameters'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/QuerySingleAirwayDefinitionResponse'
+                type: array
+                title: >-
+                  Response Search For Airways V1 Api Aerial Corridors Airways
+                  Query Post
+        '400':
+          description: Bad Request
+          detail: Invalid area of interest, please provide valid coordinates
+        '404':
+          description: Operation not found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v1/api/airways/{airway_id}:
+    get:
+      tags:
+        - airways
+      summary: Get details of a single airway by ID
+      description: Retrieve details of a specific airway by its ID.
+      operationId: >-
+        get_single_airway_details_v1_api_aerial_corridors_airways__airway_id__get
+      parameters:
+        - name: airway_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            description: The ID of the airway to retrieve.
+            title: Airway Id
+          description: The ID of the airway to retrieve.
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SingleAirwayDefinitionResponse'
+        '404':
+          description: Operation not found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    put:
+      tags:
+        - airways
+      summary: Create or update an airway by ID
+      description: >-
+        A new airway is created or an existing one is updated by providing the
+        airway ID and the new airway definition, which includes the airway name,
+        junctions, and sections. The operation is idempotent.
+      operationId: create_airway_v1_api_aerial_corridors_airways__airway_id__put
+      parameters:
+        - name: airway_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: Airway Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PutAirwayDefinitionParameters'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpsertAirwayDefinitionResponsePublic'
+        '404':
+          description: Operation not found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+        - airways
+      summary: Delete an airway by ID
+      description: Delete an airway from the ICDS by providing the airway ID.
+      operationId: delete_airway_v1_api_aerial_corridors_airways__airway_id__delete
+      parameters:
+        - name: airway_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: Airway Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteAirwayDefinitionResponse'
+        '404':
+          description: Operation not found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v1/api/discovery-finder/discovery-services:
+    post:
+      tags:
+        - discovery-finder
+      summary: Create a new discovery service URL
+      description: >-
+        Create a new discovery service url with details like region and
+        application type.
+      operationId: create_discovery_service_v1_api_discovery_finder_discovery_services_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SingleDiscoveryServiceDetail'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SingleDiscoveryServiceDetail'
+        '404':
+          description: Operation not found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v1/api/discovery-finder/discovery-services/{url_id}:
+    get:
+      tags:
+        - discovery-finder
+      summary: Get Discovery Services
+      description: >-
+        Fetches discovery service URLs from the database.
+
+        This asynchronous function retrieves a list of discovery service URLs
+        from the database session provided.
+
+
+        Returns:
+            list: A list of discovery service URLs and their details.
+      operationId: get_discovery_services_v1_api_discovery_finder_discovery_services_get
+      parameters:
+        - name: url_id
+          in: path
+          required: true
+          schema:
+            type: string
+            title: Url Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiscoveryServiceListRead'
+        '404':
+          description: Operation not found
+    delete:
+      tags:
+        - discovery-finder
+      summary: Delete Discovery Service
+      description: >-
+        Deletes a discovery service URL from the database.
+
+        This asynchronous function removes a discovery service URL from the
+        database session provided.
+
+
+        Args:
+            db_session (DBSessionDep): The database session dependency.
+            url_id (int): The ID of the discovery service URL to be deleted.
+
+        Returns:
+            dict: A dictionary containing the status of the deletion operation.
+      operationId: >-
+        delete_discovery_service_v1_api_discovery_finder_discovery_services__url_id__delete
+      parameters:
+        - name: url_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: Url Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '404':
+          description: Operation not found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v1/api/subscriptions/{subscription_id}:
+    get:
+      tags:
+        - subscriptions
+      summary: Get Subscription details
+      description: Retrieve details of a specific subscription by its ID.
+      operationId: >-
+        get_subscription_v1_api_managed_corridors_subscriptions__subscription_id__get
+      parameters:
+        - name: subscription_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            description: The ID of the subscription to retrieve.
+            title: Subscription Id
+          description: The ID of the subscription to retrieve.
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateOrUpdateSubscriptionResponse'
+        '404':
+          description: Operation not found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    put:
+      tags:
+        - subscriptions
+      summary: Upsert Subscription
+      description: >-
+        Upsert a subscription.
+
+        This endpoint creates a new subscription or updates an existing one
+        based on the provided subscription ID.
+      operationId: >-
+        upsert_subscription_v1_api_managed_corridors_subscriptions__subscription_id__put
+      parameters:
+        - name: subscription_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: Subscription Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PutSubscriptionParameters'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateOrUpdateSubscriptionResponse'
+        '404':
+          description: Operation not found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+        - subscriptions
+      summary: Delete Subscription
+      description: Delete a subscription by its ID.
+      operationId: >-
+        delete_subscription_v1_api_managed_corridors_subscriptions__subscription_id__delete
+      parameters:
+        - name: subscription_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: Subscription Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteSubscriptionResponse'
+        '404':
+          description: Operation not found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v1/api/subscriptions/query:
+    post:
+      tags:
+        - subscriptions
+      summary: Query Subscriptions
+      description: Query subscriptions in an area of interest.
+      operationId: search_subscriptions_v1_api_managed_corridors_subscriptions_query_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuerySubscriptionParameters'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/CreateOrUpdateSubscriptionResponse'
+                type: array
+                title: >-
+                  Response Search Subscriptions V1 Api Managed Corridors
+                  Subscriptions Query Post
+        '400':
+          description: Bad Request
+          detail: Invalid area of interest, please provide valid coordinates
+        '404':
+          description: Operation not found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+components:
+  schemas:
+    Airway-Input:
+      properties:
+        administrator_id:
+          type: string
+          format: uuid
+          title: Administrator Id
+        business_number:
+          type: integer
+          title: Business Number
+        airways:
+          items:
+            $ref: '#/components/schemas/SingleAirway-Input'
+          type: array
+          title: Airways
+        url:
+          type: string
+          title: Url
+      type: object
+      required:
+        - administrator_id
+        - business_number
+        - airways
+        - url
+      title: Airway
+    Airway-Output:
+      properties:
+        administrator_id:
+          type: string
+          format: uuid
+          title: Administrator Id
+        business_number:
+          type: integer
+          title: Business Number
+        airways:
+          items:
+            $ref: '#/components/schemas/SingleAirway-Output'
+          type: array
+          title: Airways
+        url:
+          type: string
+          title: Url
+      type: object
+      required:
+        - administrator_id
+        - business_number
+        - airways
+        - url
+      title: Airway
+    AirwayGeometry:
+      properties:
+        geometry:
+          $ref: '#/components/schemas/Geometry'
+      type: object
+      required:
+        - geometry
+      title: AirwayGeometry
+      examples:
+        - geometry:
+            coordinates:
+              - - 130.7309
+                - 30.3628
+                - 100
+              - - 131.8079
+                - 31.1983
+                - 100
+              - - 132.8079
+                - 32.1983
+                - 50
+              - - 133.7309
+                - 33.3628
+                - 50
+              - - 130.7309
+                - 30.3628
+                - 100
+            type: Polygon
+    AirwayJunction-Input:
+      properties:
+        id:
+          type: string
+          title: Id
+        name:
+          type: string
+          title: Name
+        type:
+          type: string
+          title: Type
+        airways:
+          items:
+            $ref: '#/components/schemas/AirwayJunctionDetail-Input'
+          type: array
+          title: Airways
+      type: object
+      required:
+        - id
+        - name
+        - type
+        - airways
+      title: AirwayJunction
+    AirwayJunction-Output:
+      properties:
+        id:
+          type: string
+          title: Id
+        name:
+          type: string
+          title: Name
+        type:
+          type: string
+          title: Type
+        airways:
+          items:
+            $ref: '#/components/schemas/AirwayJunctionDetail-Output'
+          type: array
+          title: Airways
+      type: object
+      required:
+        - id
+        - name
+        - type
+        - airways
+      title: AirwayJunction
+    AirwayJunctionDetail-Input:
+      properties:
+        airway:
+          $ref: '#/components/schemas/AirwayGeometry'
+        deviation:
+          $ref: '#/components/schemas/Deviation'
+      type: object
+      required:
+        - airway
+        - deviation
+      title: AirwayJunctionDetail
+      airway:
+        geometry:
+          coordinates:
+            - - 130.7309
+              - 30.3628
+              - 100
+            - - 131.8079
+              - 31.1983
+              - 100
+            - - 132.8079
+              - 32.1983
+              - 50
+            - - 133.7309
+              - 33.3628
+              - 50
+            - - 130.7309
+              - 30.3628
+              - 100
+          type: Polygon
+      deviation:
+        geometry:
+          coordinates:
+            - - 300.7309
+              - 30.3628
+              - 100
+            - - 310.8079
+              - 31.1983
+              - 100
+            - - 320.8079
+              - 32.1983
+              - 50
+            - - 330.7309
+              - 33.3628
+              - 50
+            - - 300.7309
+              - 30.3628
+              - 100
+          type: Polygon
+    AirwayJunctionDetail-Output:
+      properties:
+        airway:
+          $ref: '#/components/schemas/AirwayGeometry'
+        deviation:
+          $ref: '#/components/schemas/Deviation'
+      type: object
+      required:
+        - airway
+        - deviation
+      title: AirwayJunctionDetail
+      airway:
+        geometry:
+          coordinates:
+            - - 130.7309
+              - 30.3628
+              - 100
+            - - 131.8079
+              - 31.1983
+              - 100
+            - - 132.8079
+              - 32.1983
+              - 50
+            - - 133.7309
+              - 33.3628
+              - 50
+            - - 130.7309
+              - 30.3628
+              - 100
+          type: Polygon
+      deviation:
+        geometry:
+          coordinates:
+            - - 300.7309
+              - 30.3628
+              - 100
+            - - 310.8079
+              - 31.1983
+              - 100
+            - - 320.8079
+              - 32.1983
+              - 50
+            - - 330.7309
+              - 33.3628
+              - 50
+            - - 300.7309
+              - 30.3628
+              - 100
+          type: Polygon
+    AirwaySection:
+      properties:
+        id:
+          type: string
+          title: Id
+        name:
+          type: string
+          title: Name
+        airway_point_ids:
+          items:
+            type: string
+          type: array
+          title: Airway Point Ids
+      type: object
+      required:
+        - id
+        - name
+        - airway_point_ids
+      title: AirwaySection
+      examples:
+        - airway_point_ids:
+            - '30'
+            - '31'
+          id: '16'
+          name: Section A1
+    AreaOfInterest:
+      properties:
+        outline_polygon:
+          $ref: '#/components/schemas/BBoxDefinition'
+      type: object
+      required:
+        - outline_polygon
+      title: AreaOfInterest
+    AvailabilityEnum:
+      type: string
+      enum:
+        - unknown
+        - healthy
+        - unhealthy
+      title: AvailabilityEnum
+    BBoxDefinition:
+      properties:
+        min_latitude:
+          type: number
+          maximum: 90
+          minimum: -90
+          title: Min Latitude
+        min_longitude:
+          type: number
+          maximum: 180
+          minimum: -180
+          title: Min Longitude
+        max_latitude:
+          type: number
+          maximum: 90
+          minimum: -90
+          title: Max Latitude
+        max_longitude:
+          type: number
+          maximum: 180
+          minimum: -180
+          title: Max Longitude
+      type: object
+      required:
+        - min_latitude
+        - min_longitude
+        - max_latitude
+        - max_longitude
+      title: BBoxDefinition
+    CreateOrUpdateDronePortReferenceResponse:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        drone_port_details:
+          $ref: '#/components/schemas/DronePortDetails'
+      type: object
+      required:
+        - id
+        - drone_port_details
+      title: CreateOrUpdateDronePortReferenceResponse
+    CreateOrUpdateSubscriptionResponse:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        subscription_details:
+          $ref: '#/components/schemas/SubscriptionBase'
+      type: object
+      required:
+        - id
+        - subscription_details
+      title: CreateOrUpdateSubscriptionResponse
+    DeleteAirwayDefinitionResponse:
+      properties:
+        success:
+          type: integer
+          title: Success
+        message:
+          type: string
+          title: Message
+      type: object
+      required:
+        - success
+        - message
+      title: DeleteAirwayDefinitionResponse
+      description: Delete Airway Response
+      examples:
+        - message: Airway definition deleted successfully
+          success: 1
+    DeleteDronePortReferenceResponse:
+      properties:
+        success:
+          type: integer
+          title: Success
+        message:
+          type: string
+          title: Message
+      type: object
+      required:
+        - success
+        - message
+      title: DeleteDronePortReferenceResponse
+      examples:
+        - message: Drone Port deleted successfully
+          success: 1
+    DeleteSubscriptionResponse:
+      properties:
+        success:
+          type: integer
+          title: Success
+        message:
+          type: string
+          title: Message
+      type: object
+      required:
+        - success
+        - message
+      title: DeleteSubscriptionResponse
+      examples:
+        - message: Subscription deleted successfully
+          success: 1
+    Deviation:
+      properties:
+        geometry:
+          $ref: '#/components/schemas/Geometry'
+      type: object
+      required:
+        - geometry
+      title: Deviation
+      examples:
+        - geometry:
+            coordinates:
+              - - 300.7309
+                - 30.3628
+                - 100
+              - - 310.8079
+                - 31.1983
+                - 100
+              - - 320.8079
+                - 32.1983
+                - 50
+              - - 330.7309
+                - 33.3628
+                - 50
+              - - 300.7309
+                - 30.3628
+                - 100
+            type: Polygon
+    DiscoveryServiceListRead:
+      properties:
+        available_services:
+          items:
+            $ref: '#/components/schemas/SingleDiscoveryServiceDetail'
+          type: array
+          title: Available Services
+      type: object
+      required:
+        - available_services
+      title: DiscoveryServiceListRead
+      description: A class to hold a list of URLs and the type of service
+    DronePortDetails:
+      properties:
+        manufacturer:
+          anyOf:
+            - type: string
+              maxLength: 24
+              minLength: 1
+            - type: 'null'
+          title: Manufacturer
+          description: 製造メーカー
+          example: 製造メーカーA
+        port_type:
+          $ref: '#/components/schemas/DronePortType'
+          description: ポート形状。1:機械式、2:簡易、0:不明
+        latitude:
+          type: number
+          maximum: 90
+          minimum: -90
+          title: Latitude
+          description: ドローンポート中心緯度
+          example: 35.12345678
+        longitude:
+          type: number
+          maximum: 180
+          minimum: -180
+          title: Longitude
+          description: ドローンポート中心経度
+          example: 140.12345678
+        altitude:
+          type: number
+          maximum: 100
+          minimum: 0
+          title: Altitude
+          description: ドローンポート着陸面の高さ(対地高度)
+          example: 12
+        supports_drone_type:
+          type: string
+          maxLength: 24
+          title: Supports Drone Type
+          description: 対応機体。着陸可能な機体の種類等を設定
+          example: マルチコプター
+        usage_type:
+          $ref: '#/components/schemas/DronePortUsageType'
+          description: 使用用途。1:駐機場、2:緊急着陸地点
+        url:
+          type: string
+          title: Url
+          description: ドローンポートのURL
+          example: https://example.com/droneport1
+      type: object
+      required:
+        - port_type
+        - latitude
+        - longitude
+        - altitude
+        - supports_drone_type
+        - usage_type
+        - url
+      title: DronePortDetails
+      examples:
+        - altitude: 12
+          latitude: 35.12345678
+          longitude: 140.12345678
+          manufacturer: Blue Innovation
+          port_type: 1
+          supports_drone_type: Multirotor
+          url: https://example.com/droneport1
+          usage_type: 1
+    DronePortType:
+      type: integer
+      enum:
+        - 1
+        - 2
+        - 3
+      title: DronePortType
+    DronePortUsageType:
+      type: integer
+      enum:
+        - 1
+        - 2
+      title: DronePortUsageType
+    Geometry:
+      properties:
+        type:
+          type: string
+          title: Type
+        coordinates:
+          items:
+            prefixItems:
+              - type: number
+              - type: number
+              - type: number
+            type: array
+            maxItems: 3
+            minItems: 3
+          type: array
+          title: Coordinates
+      type: object
+      required:
+        - type
+        - coordinates
+      title: Geometry
+      examples:
+        - coordinates:
+            - - 130.7309
+              - 30.3628
+              - 100
+            - - 131.8079
+              - 31.1983
+              - 100
+            - - 132.8079
+              - 32.1983
+              - 50
+            - - 133.7309
+              - 33.3628
+              - 50
+            - - 130.7309
+              - 30.3628
+              - 100
+          type: Polygon
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    PutAirwayDefinitionParameters:
+      properties:
+        airway:
+          $ref: '#/components/schemas/Airway-Input'
+      type: object
+      required:
+        - airway
+      title: PutAirwayDefinitionParameters
+    PutDronePortReferenceParameters:
+      properties:
+        drone_port_details:
+          $ref: '#/components/schemas/DronePortDetails'
+      type: object
+      required:
+        - drone_port_details
+      title: PutDronePortReferenceParameters
+    PutSubscriptionParameters:
+      properties:
+        area_of_interest:
+          $ref: '#/components/schemas/AreaOfInterest'
+        time_start:
+          type: string
+          format: date-time
+          title: Time Start
+        time_end:
+          type: string
+          format: date-time
+          title: Time End
+        sp_base_url:
+          type: string
+          title: Sp Base Url
+      type: object
+      required:
+        - area_of_interest
+        - time_start
+        - time_end
+        - sp_base_url
+      title: PutSubscriptionParameters
+      examples:
+        - area_of_interest:
+            outline_polygon:
+              max_latitude: 0
+              max_longitude: 0
+              min_latitude: 0
+              min_longitude: 0
+          sp_base_url: https://example.com
+          time_end: '2022-01-01T00:00:00Z'
+          time_start: '2022-01-01T00:00:00Z'
+    QueryAirwayDefinitionParameters:
+      properties:
+        area_of_interest:
+          $ref: '#/components/schemas/AreaOfInterest'
+      type: object
+      required:
+        - area_of_interest
+      title: QueryAirwayDefinitionParameters
+      description: Query all Airway Definitions for an area of interest
+      examples:
+        - area_of_interest:
+            outline_polygon:
+              max_latitude: 0
+              max_longitude: 0
+              min_latitude: 0
+              min_longitude: 0
+    QueryDronePortReferenceParameters:
+      properties:
+        area_of_interest:
+          $ref: '#/components/schemas/AreaOfInterest'
+      type: object
+      required:
+        - area_of_interest
+      title: QueryDronePortReferenceParameters
+    QueryDronePortReferenceResponse:
+      properties:
+        url:
+          type: string
+          title: Url
+      type: object
+      required:
+        - url
+      title: QueryDronePortReferenceResponse
+    QuerySingleAirwayDefinitionResponse:
+      properties:
+        url:
+          type: string
+          title: Url
+      type: object
+      required:
+        - url
+      title: QuerySingleAirwayDefinitionResponse
+    QuerySubscriptionParameters:
+      properties:
+        area_of_interest:
+          $ref: '#/components/schemas/AreaOfInterest'
+      type: object
+      required:
+        - area_of_interest
+      title: QuerySubscriptionParameters
+    SingleAirway-Input:
+      properties:
+        id:
+          type: string
+          title: Id
+        name:
+          type: string
+          title: Name
+        junctions:
+          items:
+            $ref: '#/components/schemas/AirwayJunction-Input'
+          type: array
+          title: Junctions
+        sections:
+          items:
+            $ref: '#/components/schemas/AirwaySection'
+          type: array
+          title: Sections
+      type: object
+      required:
+        - id
+        - name
+        - junctions
+        - sections
+      title: SingleAirway
+      id: 7152da3c-8f48-4e44-9838-2ce720b7c7b8
+      junctions:
+        - airways:
+            - airway:
+                geometry:
+                  coordinates:
+                    - - 130.7309
+                      - 30.3628
+                      - 100
+                    - - 131.8079
+                      - 31.1983
+                      - 100
+                    - - 132.8079
+                      - 32.1983
+                      - 50
+                    - - 133.7309
+                      - 33.3628
+                      - 50
+                    - - 130.7309
+                      - 30.3628
+                      - 100
+                  type: Polygon
+              deviation:
+                geometry:
+                  coordinates:
+                    - - 300.7309
+                      - 30.3628
+                      - 100
+                    - - 310.8079
+                      - 31.1983
+                      - 100
+                    - - 320.8079
+                      - 32.1983
+                      - 50
+                    - - 330.7309
+                      - 33.3628
+                      - 50
+                    - - 300.7309
+                      - 30.3628
+                      - 100
+                  type: Polygon
+          id: '30'
+          name: string
+          type: Feature
+        - airwayJunctionId: '31'
+          airways:
+            - airway:
+                geometry:
+                  coordinates:
+                    - - 140.7309
+                      - 40.3628
+                      - 100
+                    - - 141.8079
+                      - 41.1983
+                      - 100
+                    - - 142.8079
+                      - 42.1983
+                      - 50
+                    - - 143.7309
+                      - 43.3628
+                      - 50
+                    - - 140.7309
+                      - 40.3628
+                      - 100
+                  type: Polygon
+              deviation:
+                geometry:
+                  coordinates:
+                    - - 340.7309
+                      - 34.3628
+                      - 100
+                    - - 350.8079
+                      - 35.1983
+                      - 100
+                    - - 360.8079
+                      - 36.1983
+                      - 50
+                    - - 370.7309
+                      - 37.3628
+                      - 50
+                    - - 340.7309
+                      - 34.3628
+                      - 100
+                  type: Polygon
+          name: string
+          type: Feature
+      name: A1
+      sections:
+        - airway_point_ids:
+            - '30'
+            - '31'
+          id: '16'
+          name: DUMMY
+        - airway_point_ids:
+            - '31'
+            - '32'
+          id: '17'
+          name: DUMMY
+    SingleAirway-Output:
+      properties:
+        id:
+          type: string
+          title: Id
+        name:
+          type: string
+          title: Name
+        junctions:
+          items:
+            $ref: '#/components/schemas/AirwayJunction-Output'
+          type: array
+          title: Junctions
+        sections:
+          items:
+            $ref: '#/components/schemas/AirwaySection'
+          type: array
+          title: Sections
+      type: object
+      required:
+        - id
+        - name
+        - junctions
+        - sections
+      title: SingleAirway
+      id: 7152da3c-8f48-4e44-9838-2ce720b7c7b8
+      junctions:
+        - airways:
+            - airway:
+                geometry:
+                  coordinates:
+                    - - 130.7309
+                      - 30.3628
+                      - 100
+                    - - 131.8079
+                      - 31.1983
+                      - 100
+                    - - 132.8079
+                      - 32.1983
+                      - 50
+                    - - 133.7309
+                      - 33.3628
+                      - 50
+                    - - 130.7309
+                      - 30.3628
+                      - 100
+                  type: Polygon
+              deviation:
+                geometry:
+                  coordinates:
+                    - - 300.7309
+                      - 30.3628
+                      - 100
+                    - - 310.8079
+                      - 31.1983
+                      - 100
+                    - - 320.8079
+                      - 32.1983
+                      - 50
+                    - - 330.7309
+                      - 33.3628
+                      - 50
+                    - - 300.7309
+                      - 30.3628
+                      - 100
+                  type: Polygon
+          id: '30'
+          name: string
+          type: Feature
+        - airwayJunctionId: '31'
+          airways:
+            - airway:
+                geometry:
+                  coordinates:
+                    - - 140.7309
+                      - 40.3628
+                      - 100
+                    - - 141.8079
+                      - 41.1983
+                      - 100
+                    - - 142.8079
+                      - 42.1983
+                      - 50
+                    - - 143.7309
+                      - 43.3628
+                      - 50
+                    - - 140.7309
+                      - 40.3628
+                      - 100
+                  type: Polygon
+              deviation:
+                geometry:
+                  coordinates:
+                    - - 340.7309
+                      - 34.3628
+                      - 100
+                    - - 350.8079
+                      - 35.1983
+                      - 100
+                    - - 360.8079
+                      - 36.1983
+                      - 50
+                    - - 370.7309
+                      - 37.3628
+                      - 50
+                    - - 340.7309
+                      - 34.3628
+                      - 100
+                  type: Polygon
+          name: string
+          type: Feature
+      name: A1
+      sections:
+        - airway_point_ids:
+            - '30'
+            - '31'
+          id: '16'
+          name: DUMMY
+        - airway_point_ids:
+            - '31'
+            - '32'
+          id: '17'
+          name: DUMMY
+    SingleAirwayDefinitionResponse:
+      properties:
+        airway:
+          $ref: '#/components/schemas/Airway-Output'
+      type: object
+      required:
+        - airway
+      title: SingleAirwayDefinitionResponse
+      description: Put airways definition parameters
+    SingleDiscoveryServiceDetail:
+      properties:
+        url:
+          type: string
+          title: Url
+        domain:
+          type: string
+          title: Domain
+      type: object
+      required:
+        - url
+        - domain
+      title: SingleDiscoveryServiceDetail
+      description: A class to hold a list of URLs and the type of service and regions
+      examples:
+        - application_type: drone_corridor
+          region: tokyo
+          url: https://jpn.discoveryservice.com
+    SubscriptionBase:
+      properties:
+        version:
+          type: string
+          title: Version
+        notification_index:
+          type: integer
+          title: Notification Index
+        sp_base_url:
+          type: string
+          title: Sp Base Url
+        time_start:
+          type: string
+          format: date-time
+          title: Time Start
+        time_end:
+          type: string
+          format: date-time
+          title: Time End
+      type: object
+      required:
+        - version
+        - notification_index
+        - sp_base_url
+        - time_start
+        - time_end
+      title: SubscriptionBase
+    UpsertAirwayDefinitionResponsePublic:
+      properties:
+        airway:
+          $ref: '#/components/schemas/Airway-Output'
+      type: object
+      required:
+        - airway
+      title: UpsertAirwayDefinitionResponsePublic
+      description: A class to read data from the Airway table
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+              - type: string
+              - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+      type: object
+      required:
+        - loc
+        - msg
+        - type
+      title: ValidationError
+    VersionAvailabilityRead:
+      properties:
+        version:
+          type: string
+          title: Version
+        availability:
+          $ref: '#/components/schemas/AvailabilityEnum'
+      type: object
+      required:
+        - version
+        - availability
+      title: VersionAvailabilityRead
+      description: A class to hold version and availability of ICDS
+      examples:
+        - availability: healthy
+          version: adfgde3
